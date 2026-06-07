@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Hệ thống Ký số PDF — RSA-PSS + SHA-256 + PAdES{% endblock %}
+{% block content %}
+
+<h1>Hệ thống Ký số PDF</h1>
+<p class="subtitle">Chuẩn PAdES / ISO 32000-1 · RSA-PSS + SHA-256 · Chứng thư X.509</p>
+
+<div class="home-grid">
+    <a href="/keygen" class="home-card">
+        <div class="icon">🔑</div>
+        <h3>Tạo chứng thư</h3>
+        <p>Sinh cặp khóa RSA và chứng thư X.509 tự ký để dùng cho việc ký số.</p>
+    </a>
+    <a href="/sign" class="home-card">
+        <div class="icon">✍️</div>
+        <h3>Ký PDF</h3>
+        <p>Nhúng chữ ký số PAdES vào file PDF theo cơ chế Byte-Range chuẩn ISO.</p>
+    </a>
+    <a href="/verify" class="home-card">
+        <div class="icon">🔍</div>
+        <h3>Xác thực chữ ký</h3>
+        <p>Kiểm tra tính hợp lệ của chữ ký số RSA-PSS và toàn vẹn dữ liệu PDF.</p>
+    </a>
+</div>
+
+<div class="card" style="margin-top:24px;">
+    <h2>Công nghệ sử dụng</h2>
+    <div class="tech-badges">
+        <span class="badge">RSA-PSS 2048/4096-bit</span>
+        <span class="badge">SHA-256</span>
+        <span class="badge">X.509 v3</span>
+        <span class="badge">PAdES / ISO 32000-1</span>
+        <span class="badge">CMS / PKCS#7</span>
+        <span class="badge">Byte-Range Signature</span>
+        <span class="badge">pyHanko</span>
+        <span class="badge">Python Flask</span>
+    </div>
+    <p style="margin-top:16px; font-size:0.88rem; color:#888; line-height:1.6;">
+        Chữ ký PAdES được nhúng trực tiếp vào cấu trúc file PDF thông qua cơ chế
+        <strong>Byte-Range</strong> — đảm bảo mọi thay đổi sau khi ký đều bị phát hiện.
+        Chứng thư X.509 tự ký (Self-Signed Certificate) đính kèm trong gói CMS/PKCS#7.
+    </p>
+</div>
+
+{% endblock %}

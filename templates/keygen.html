@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Tạo chứng thư — PDF Ký số{% endblock %}
+{% block content %}
+
+<h1>Tạo chứng thư X.509</h1>
+<p class="subtitle">Sinh cặp khóa RSA và chứng thư số tự ký (Self-Signed Certificate)</p>
+
+<div class="card">
+    <h2>Thông tin định danh</h2>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Họ tên người ký <span class="req">*</span></label>
+            <input type="text" id="common_name" value="Nguyen Van A" placeholder="Nguyen Van A">
+        </div>
+        <div class="form-group">
+            <label>Tổ chức / Đơn vị</label>
+            <input type="text" id="organization" value="Cong ty ABC" placeholder="Cong ty ABC">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Mã quốc gia</label>
+            <select id="country">
+                <option value="VN" selected>VN — Việt Nam</option>
+                <option value="US">US — Hoa Kỳ</option>
+                <option value="GB">GB — Anh</option>
+                <option value="JP">JP — Nhật Bản</option>
+                <option value="SG">SG — Singapore</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Thời hạn chứng thư (ngày)</label>
+            <input type="number" id="valid_days" value="730" min="30" max="3650">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Kích thước khóa RSA</label>
+            <select id="key_size">
+                <option value="2048" selected>2048-bit (Khuyến nghị)</option>
+                <option value="4096">4096-bit (Bảo mật cao hơn, chậm hơn)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu bảo vệ Private Key</label>
+            <input type="password" id="passphrase" placeholder="Để trống nếu không muốn mã hóa">
+        </div>
+    </div>
+
+    <div id="alert-keygen" class="alert" style="margin-bottom:16px;"></div>
+
+    <button class="btn btn-primary" id="btn-keygen" onclick="doKeygen()">
+        <span class="spinner" id="spinner-keygen"></span>
+        🔑 Tạo khóa và chứng thư
+    </button>
+</div>
+
+<!-- Kết quả -->
+<div class="card" id="result-card" style="display:none;">
+    <h2>✅ Sinh khóa thành công</h2>
+    <div id="result-info" style="font-size:0.92rem; margin-bottom:20px; line-height:1.8;"></div>
+
+    <p style="font-size:0.88rem; color:#888; margin-bottom:16px;">
+        ⚠️ Tải về ngay — file sẽ bị xóa khi server khởi động lại.
+    </p>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a id="dl-key" class="btn btn-primary" download>
+            ⬇️ Tải Private Key (.pem)
+        </a>
+        <a id="dl-cert" class="btn btn-secondary" download>
+            ⬇️ Tải Certificate (.crt)
+        </a>
+    </div>
+</div>
+
+<script>
+async function doKeygen() {
+    const btn     = document.getElementById('btn-keygen');
+    const spinner = document.getElementById('spinner-keygen');
+    const alert   = document.getElementById('alert-keygen');
+
+    btn.disabled     = true;
+    spinner.style.display = 'inline-block';
+    alert.className  = 'alert';
+    alert.textContent = '';
+
+    const body = new FormData();
+    body.append('common_name',  document.getElementById('common_name').value);
+    body.append('organization', document.getElementById('organization').value);
+    body.append('country',      document.getElementById('country').value);
+    body.append('valid_days',   document.getElementById('valid_days').value);
+    body.append('key_size',     document.getElementById('key_size').value);
+    body.append('passphrase',   document.getElementById('passphrase').value);
+
+    try {
+        const res  = await fetch('/keygen', { method: 'POST', body });
+        const data = await res.json();
+
+        if (data.success) {
+            const sid = data.session_id;
+            document.getElementById('result-card').style.display = 'block';
+            document.getElementById('result-info').innerHTML =
+                `<b>Tên người ký (CN):</b> ${data.cn}<br>` +
+                `<b>Tổ chức (O):</b> ${data.org}<br>` +
+                `<b>Quốc gia (C):</b> ${data.country}<br>` +
+                `<b>Thời hạn:</b> ${data.valid_days} ngày<br>`;
+
+            document.getElementById('dl-key').href  = `/keygen/download/${sid}/key`;
+            document.getElementById('dl-cert').href = `/keygen/download/${sid}/cert`;
+
+            alert.className   = 'alert alert-success show';
+            alert.textContent = '✅ ' + data.message;
+        } else {
+            alert.className   = 'alert alert-error show';
+            alert.textContent = '❌ Lỗi: ' + data.error;
+        }
+    } catch (e) {
+        alert.className   = 'alert alert-error show';
+        alert.textContent = '❌ Lỗi kết nối: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

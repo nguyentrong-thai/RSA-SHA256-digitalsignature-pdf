@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Ký PDF — PDF Ký số{% endblock %}
+{% block content %}
+
+<h1>Ký số PDF</h1>
+<p class="subtitle">Nhúng chữ ký PAdES · RSA-PSS + SHA-256 · Cơ chế Byte-Range</p>
+
+<div class="card">
+    <h2><span class="step-badge">1</span>Upload file</h2>
+
+    <div class="form-group">
+        <label>File PDF cần ký <span class="req">*</span></label>
+        <div class="file-drop" id="drop-pdf">
+            <input type="file" id="pdf" accept=".pdf" onchange="showName(this,'chosen-pdf')">
+            <div class="icon">📄</div>
+            <div class="label">Kéo thả file PDF vào đây hoặc nhấn để chọn</div>
+            <div class="chosen" id="chosen-pdf"></div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Private Key (.pem) <span class="req">*</span></label>
+            <div class="file-drop" id="drop-key">
+                <input type="file" id="key" accept=".pem,.key" onchange="showName(this,'chosen-key')">
+                <div class="icon">🔑</div>
+                <div class="label">Chọn file private_key.pem</div>
+                <div class="chosen" id="chosen-key"></div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Certificate (.crt / .pem) <span class="req">*</span></label>
+            <div class="file-drop" id="drop-cert">
+                <input type="file" id="cert" accept=".crt,.pem,.cer" onchange="showName(this,'chosen-cert')">
+                <div class="icon">📜</div>
+                <div class="label">Chọn file certificate.crt</div>
+                <div class="chosen" id="chosen-cert"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2><span class="step-badge">2</span>Thông tin chữ ký</h2>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Tên người ký</label>
+            <input type="text" id="signer_name" value="Nguyen Van A">
+        </div>
+        <div class="form-group">
+            <label>Lý do ký</label>
+            <input type="text" id="reason" value="Ky duyet tai lieu">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Mật khẩu Private Key (nếu có)</label>
+        <input type="password" id="passphrase" placeholder="Để trống nếu key không mã hóa">
+    </div>
+</div>
+
+<div class="card">
+    <h2><span class="step-badge">3</span>Tùy chọn chữ ký trực quan</h2>
+
+    <div class="toggle-row">
+        <label class="toggle">
+            <input type="checkbox" id="visible" checked onchange="toggleVisual(this)">
+            <span class="slider"></span>
+        </label>
+        <span>Hiển thị khung chữ ký trực quan trên PDF</span>
+    </div>
+
+    <div id="visual-opts">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Trang ký</label>
+                <select id="page">
+                    <option value="last" selected>Trang cuối</option>
+                    <option value="1">Trang 1</option>
+                    <option value="2">Trang 2</option>
+                    <option value="3">Trang 3</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Vị trí khung chữ ký</label>
+                <select id="pos_preset">
+                    <option value="Bottom-Right" selected>Dưới - Phải</option>
+                    <option value="Bottom-Left">Dưới - Trái</option>
+                    <option value="Top-Right">Trên - Phải</option>
+                    <option value="Top-Left">Trên - Trái</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Chiều rộng khung (points)</label>
+                <input type="number" id="width" value="170" min="80" max="400">
+            </div>
+            <div class="form-group">
+                <label>Chiều cao khung (points)</label>
+                <input type="number" id="height" value="65" min="40" max="200">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="alert-sign" class="alert" style="margin-bottom:16px;"></div>
+
+<button class="btn btn-primary" id="btn-sign" onclick="doSign()" style="margin-bottom:24px;">
+    <span class="spinner" id="spinner-sign"></span>
+    ✍️ Ký số PDF
+</button>
+
+<!-- Kết quả -->
+<div class="card" id="result-card" style="display:none;">
+    <h2>✅ Ký số thành công!</h2>
+    <div id="result-info" style="font-size:0.92rem; line-height:1.8; margin-bottom:16px;"></div>
+    <a id="dl-signed" class="btn btn-green" download>
+        ⬇️ Tải file PDF đã ký
+    </a>
+</div>
+
+<script>
+function showName(input, targetId) {
+    const el = document.getElementById(targetId);
+    el.textContent = input.files[0] ? '✔ ' + input.files[0].name : '';
+}
+
+function toggleVisual(cb) {
+    document.getElementById('visual-opts').style.display = cb.checked ? 'block' : 'none';
+}
+
+// Drag & drop highlight
+document.querySelectorAll('.file-drop').forEach(drop => {
+    drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop',      e => { e.preventDefault(); drop.classList.remove('dragover'); });
+});
+
+async function doSign() {
+    const pdfFile  = document.getElementById('pdf').files[0];
+    const keyFile  = document.getElementById('key').files[0];
+    const certFile = document.getElementById('cert').files[0];
+
+    if (!pdfFile || !keyFile || !certFile) {
+        showAlert('error', '❌ Vui lòng chọn đủ 3 file: PDF, Private Key và Certificate!');
+        return;
+    }
+
+    const btn     = document.getElementById('btn-sign');
+    const spinner = document.getElementById('spinner-sign');
+    btn.disabled  = true;
+    spinner.style.display = 'inline-block';
+    clearAlert();
+
+    const body = new FormData();
+    body.append('pdf',         pdfFile);
+    body.append('key',         keyFile);
+    body.append('cert',        certFile);
+    body.append('passphrase',  document.getElementById('passphrase').value);
+    body.append('signer_name', document.getElementById('signer_name').value);
+    body.append('reason',      document.getElementById('reason').value);
+    body.append('visible',     document.getElementById('visible').checked ? 'true' : 'false');
+    body.append('page',        document.getElementById('page').value);
+    body.append('pos_preset',  document.getElementById('pos_preset').value);
+    body.append('width',       document.getElementById('width').value);
+    body.append('height',      document.getElementById('height').value);
+
+    try {
+        const res  = await fetch('/sign', { method: 'POST', body });
+        const data = await res.json();
+
+        if (data.success) {
+            document.getElementById('result-card').style.display = 'block';
+            document.getElementById('result-info').innerHTML =
+                `<b>Người ký:</b> ${data.signer_name}<br>` +
+                `<b>Thời gian ký:</b> ${data.sign_time}<br>` +
+                `<b>Kích thước file:</b> ${data.file_size_kb} KB<br>`;
+            document.getElementById('dl-signed').href = `/sign/download/${data.download_id}`;
+            showAlert('success', '✅ ' + data.message);
+        } else {
+            showAlert('error', '❌ Lỗi: ' + data.error);
+        }
+    } catch (e) {
+        showAlert('error', '❌ Lỗi kết nối: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+    }
+}
+
+function showAlert(type, msg) {
+    const el = document.getElementById('alert-sign');
+    el.className = `alert alert-${type} show`;
+    el.textContent = msg;
+}
+function clearAlert() {
+    document.getElementById('alert-sign').className = 'alert';
+}
+</script>
+{% endblock %}

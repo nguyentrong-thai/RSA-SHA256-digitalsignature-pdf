@@ -1,0 +1,7 @@
+Flask>=3.0.0
+pyhanko>=0.21.0
+pyhanko-certvalidator>=0.26.0
+cryptography>=42.0.0
+reportlab>=4.1.0
+pypdf>=4.0.0
+gunicorn>=21.0.0

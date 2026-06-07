@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Xác thực chữ ký — PDF Ký số{% endblock %}
+{% block content %}
+
+<h1>Xác thực chữ ký số</h1>
+<p class="subtitle">Kiểm tra tính toàn vẹn Byte-Range và hợp lệ của chữ ký RSA-PSS</p>
+
+<div class="card">
+    <h2>Upload file PDF đã ký</h2>
+
+    <div class="form-group">
+        <div class="file-drop" id="drop-pdf">
+            <input type="file" id="pdf" accept=".pdf" onchange="showName(this)">
+            <div class="icon">🔍</div>
+            <div class="label">Kéo thả file PDF đã ký vào đây hoặc nhấn để chọn</div>
+            <div class="chosen" id="chosen-pdf"></div>
+        </div>
+    </div>
+
+    <div id="alert-verify" class="alert" style="margin-bottom:16px;"></div>
+
+    <button class="btn btn-primary" id="btn-verify" onclick="doVerify()">
+        <span class="spinner" id="spinner-verify"></span>
+        🔍 Xác thực chữ ký
+    </button>
+</div>
+
+<!-- Kết quả -->
+<div id="result-section" style="display:none;">
+    <div class="card">
+        <h2 id="result-title"></h2>
+        <pre class="result-box show" id="result-details"></pre>
+    </div>
+</div>
+
+<script>
+function showName(input) {
+    const el = document.getElementById('chosen-pdf');
+    el.textContent = input.files[0] ? '✔ ' + input.files[0].name : '';
+}
+
+document.querySelectorAll('.file-drop').forEach(drop => {
+    drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop',      e => { e.preventDefault(); drop.classList.remove('dragover'); });
+});
+
+async function doVerify() {
+    const pdfFile = document.getElementById('pdf').files[0];
+    if (!pdfFile) {
+        showAlert('error', '❌ Vui lòng chọn file PDF!');
+        return;
+    }
+
+    const btn     = document.getElementById('btn-verify');
+    const spinner = document.getElementById('spinner-verify');
+    btn.disabled  = true;
+    spinner.style.display = 'inline-block';
+
+    const alertEl = document.getElementById('alert-verify');
+    alertEl.className = 'alert';
+
+    const body = new FormData();
+    body.append('pdf', pdfFile);
+
+    try {
+        const res  = await fetch('/verify', { method: 'POST', body });
+        const data = await res.json();
+
+        const section  = document.getElementById('result-section');
+        const titleEl  = document.getElementById('result-title');
+        const detailEl = document.getElementById('result-details');
+
+        section.style.display = 'block';
+
+        if (data.success) {
+            titleEl.textContent  = data.valid ? '✅ ' + data.title : '❌ ' + data.title;
+            detailEl.textContent = data.details;
+            detailEl.className   = 'result-box show ' + (data.valid ? 'valid-sig' : 'invalid-sig');
+        } else {
+            showAlert('error', '❌ Lỗi: ' + data.error);
+            section.style.display = 'none';
+        }
+    } catch (e) {
+        showAlert('error', '❌ Lỗi kết nối: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+    }
+}
+
+function showAlert(type, msg) {
+    const el = document.getElementById('alert-verify');
+    el.className = `alert alert-${type} show`;
+    el.textContent = msg;
+}
+</script>
+{% endblock %}
