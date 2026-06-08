@@ -247,6 +247,7 @@ def _compute_stamp_box(
     # Clamp vào trong trang
     x0 = max(0.0, min(x0, page_width  - width))
     y0 = max(0.0, min(y0, page_height - height))
+
     return x0, y0, x0 + width, y0 + height
 
 
@@ -290,10 +291,12 @@ def draw_visual_stamp_on_pdf(
     x0, y0, x1, y1 = _compute_stamp_box(pw, ph, pos_preset, custom_x, custom_y, width, height)
 
     # ── Vẽ overlay bằng reportlab ──────────────────────────────────────────
+    # ReportLab và PDF đều dùng hệ tọa độ bottom-left = (0,0).
+    # KHÔNG dùng translate/scale để tránh tính sai vị trí.
     buf = io.BytesIO()
     c   = rl_canvas.Canvas(buf, pagesize=(pw, ph))
 
-    # Khung viền kép màu đỏ
+    # Khung viền kép màu đỏ — vẽ trực tiếp tại (x0, y0) trong hệ PDF
     c.setStrokeColor(HexColor("#CC0000"))
     c.setLineWidth(1.5)
     c.rect(x0, y0, width, height, stroke=1, fill=0)
@@ -301,7 +304,7 @@ def draw_visual_stamp_on_pdf(
     c.setLineWidth(0.5)
     c.rect(x0 + 2, y0 + 2, width - 4, height - 4, stroke=1, fill=0)
 
-    # Nội dung text (font Helvetica — an toàn với ký tự Latin, không dấu tiếng Việt)
+    # Nội dung text — bắt đầu từ phía trên của khung (y0 + height - 12)
     c.setFillColor(HexColor("#B71C1C"))
     text_y = y0 + height - 12
     for i, line in enumerate(text_lines):
@@ -317,7 +320,7 @@ def draw_visual_stamp_on_pdf(
     writer = PypdfWriter()
     for idx, page in enumerate(reader.pages):
         if idx == page_num - 1:
-            page.merge_page(overlay_page)
+            page.merge_page(overlay_page, expand=True)
         writer.add_page(page)
 
     out = io.BytesIO()
