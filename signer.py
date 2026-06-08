@@ -345,7 +345,7 @@ def sign_pdf_file(
     custom_x:   float = 0.0,
     custom_y:   float = 0.0,
     width:      float = 160.0,
-    height:     float = 100.0,
+    height:     float = 65.0,
     text_lines: list[str] | None = None,
     # metadata chữ ký
     signer_name: str  = "",
@@ -828,7 +828,7 @@ class PDFSignerApp:
         self.s_page = tk.StringVar(value="last")
         self.s_pos  = tk.StringVar(value="Bottom-Right")
         self.s_w    = tk.StringVar(value="170")
-        self.s_h    = tk.StringVar(value="100")
+        self.s_h    = tk.StringVar(value="65")
         self.s_cx   = tk.StringVar(value="100")
         self.s_cy   = tk.StringVar(value="100")
 
@@ -907,7 +907,7 @@ class PDFSignerApp:
                 custom_x=float(self.s_cx.get() or 100),
                 custom_y=float(self.s_cy.get() or 100),
                 width=float(self.s_w.get() or 170),
-                height=float(self.s_h.get() or 100),
+                height=float(self.s_h.get() or 65),
                 text_lines=text_lines,
                 signer_name=sig_name,
                 reason=reason,
@@ -943,7 +943,7 @@ class PDFSignerApp:
         ttk.Label(f, text=(
             "ℹ️  Không cần Public Key riêng — chứng thư X.509 đã được nhúng\n"
             "    trực tiếp vào file PDF theo chuẩn CMS/PKCS#7 của PAdES."
-        ), foreground="#15100c0", font=("Helvetica", 9, "italic"),
+        ), foreground="#1565c0", font=("Helvetica", 9, "italic"),
            wraplength=570).grid(row=1, column=0, columnspan=3, sticky="w", pady=8)
 
         self.v_result = ttk.Label(f,
@@ -1042,7 +1042,7 @@ def interactive_cli():
 
             vis = (input("Chữ ký trực quan? (y/n) [y]: ").strip().lower() or "y") == "y"
             page_str = pos_preset = "last"
-            cx = cy = 0.0; w = 170.0; h = 100.0
+            cx = cy = 0.0; w = 170.0; h = 65.0
             sig_name = reason = ""
             text_lines = []
             if vis:
@@ -1054,7 +1054,7 @@ def interactive_cli():
                     cx = float(input("Tọa độ X: ").strip() or "100")
                     cy = float(input("Tọa độ Y: ").strip() or "100")
                 w = float(input("Chiều rộng khung [170]: ").strip() or "170")
-                h = float(input("Chiều cao khung [100]: ").strip() or "100")
+                h = float(input("Chiều cao khung [65]: ").strip() or "65")
             sig_name = input("Tên người ký [Nguyen Van A]: ").strip() or "Nguyen Van A"
             reason   = input("Lý do ký [Ky duyet tai lieu]: ").strip() or "Ky duyet tai lieu"
             now_str  = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -1146,7 +1146,7 @@ def main_cli():
     sg.add_argument("--cx",         type=float, default=100.0)
     sg.add_argument("--cy",         type=float, default=100.0)
     sg.add_argument("--width",      type=float, default=170.0)
-    sg.add_argument("--height",     type=float, default=100.0)
+    sg.add_argument("--height",     type=float, default=65.0)
     sg.add_argument("--name",       default="Nguyen Van A",    help="Tên người ký")
     sg.add_argument("--reason",     default="Ky duyet tai lieu")
 
