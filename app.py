@@ -157,7 +157,6 @@ def sign():
     pos_preset   = request.form.get("pos_preset",   "Bottom-Right").strip()
     width        = float(request.form.get("width",  "170"))
     height       = float(request.form.get("height", "65"))
-
     # ── Chuẩn bị text_lines cho visual stamp ─────────────────────────────────
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     text_lines = [
@@ -172,6 +171,8 @@ def sign():
     base_name  = os.path.splitext(pdf_file.filename)[0]
     out_name   = f"{base_name}_signed_{session_id}.pdf"
     out_path   = os.path.join(SIGNED_DIR, out_name)
+    custom_x = float(request.form.get("custom_x", "0"))
+    custom_y = float(request.form.get("custom_y", "0"))
 
     try:
         info = sign_pdf_file(
@@ -183,8 +184,8 @@ def sign():
             visible=visible,
             page_str=page_str,
             pos_preset=pos_preset,
-            custom_x=0.0,
-            custom_y=0.0,
+            custom_x=custom_x,
+            custom_y=custom_y,
             width=width,
             height=height,
             text_lines=text_lines,
