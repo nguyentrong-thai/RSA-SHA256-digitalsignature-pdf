@@ -135,7 +135,7 @@ def generate_identity_and_cert(
     """
     # ── Bước 1: Sinh khóa RSA ─────────────────────────────────────────────
     private_key = rsa.generate_private_key(
-        public_exponent=100537,
+        public_exponent=65537,
         key_size=key_size,
         backend=default_backend(),
         )
