@@ -229,7 +229,7 @@
     position: absolute;
     bottom: 0; left: 0; right: 0;
     text-align: center;
-    font-size: 0.100rem;
+    font-size: 0.65rem;
     color: #fff;
     background: rgba(0,0,0,0.55);
     padding: 1px 0;
@@ -407,7 +407,7 @@
       </div>
       <div class="form-group">
         <label>Chiều cao vùng ký (pts)</label>
-        <input type="number" id="sig-height" value="100" min="30" max="200" oninput="updateBoxFromInputs()">
+        <input type="number" id="sig-height" value="65" min="30" max="200" oninput="updateBoxFromInputs()">
       </div>
     </div>
   </div>
@@ -448,9 +448,9 @@ const sigState = {
   active:    false,   // a box has been drawn
   confirmed: false,   // user confirmed
   x: 0, y: 0,        // top-left in canvas px
-  w: 170, h: 100,     // size in canvas px (initial default)
+  w: 170, h: 65,     // size in canvas px (initial default)
   // PDF coords (returned to server)
-  pdf: { page: 1, x: 0, y: 0, width: 170, height: 100 },
+  pdf: { page: 1, x: 0, y: 0, width: 170, height: 65 },
 };
 
 // Drag/resize interaction
@@ -507,7 +507,7 @@ async function renderPage(pageNum) {
     const rect2 = canvas.getBoundingClientRect();
     const i2c2  = rect2.width / canvas.width;
     sigState.w = (parseFloat(document.getElementById('sig-width').value)  || 170) * scale * i2c2;
-    sigState.h = (parseFloat(document.getElementById('sig-height').value) || 100)  * scale * i2c2;
+    sigState.h = (parseFloat(document.getElementById('sig-height').value) || 65)  * scale * i2c2;
 
     // Re-draw existing sig box nếu đúng trang
     if (sigState.active && sigState.pdf.page === pageNum) {
@@ -679,7 +679,7 @@ function updateBoxFromInputs() {
   const rect = canvas.getBoundingClientRect();
   const i2c  = rect.width / canvas.width; // internal→CSS ratio
   const wPts = parseFloat(document.getElementById('sig-width').value)  || 170;
-  const hPts = parseFloat(document.getElementById('sig-height').value) || 100;
+  const hPts = parseFloat(document.getElementById('sig-height').value) || 65;
   sigState.w = wPts * scale * i2c; // pts * scale = internal px, * i2c = CSS px
   sigState.h = hPts * scale * i2c;
   if (sigState.active) {
