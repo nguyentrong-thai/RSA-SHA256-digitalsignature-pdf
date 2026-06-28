@@ -1,8 +1,6 @@
 """
 app.py — Flask Web Server cho Hệ thống Ký số PDF PAdES
-Chuyển đổi từ Tkinter Desktop App sang Web App
 """
-
 import os
 import io
 import uuid
